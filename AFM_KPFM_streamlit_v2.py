@@ -1,7 +1,26 @@
+from pathlib import Path
+from PIL import Image
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import base64
+
+# --- Base path (raíz del repositorio) ---
+BASE_DIR = Path(__file__).parent
+
+# Ruta robusta a la imagen (está en la raíz del repo)
+ICON_PATH = BASE_DIR / "portada_streamlit.png"
+
+st.set_page_config(
+    page_title="3D AFM",
+    page_icon=Image.open(ICON_PATH),  # se muestra como favicon de la pestaña
+    layout="wide",
+)
+try:
+    st.logo(str(ICON_PATH))  # disponible en versiones recientes
+except Exception:
+    # Alternativa compatible: pon el logo en la barra lateral
+    st.sidebar.image(str(ICON_PATH), use_container_width=True)
 
 # --- Fondo con imagen ---
 def set_background(png_file):
@@ -100,7 +119,7 @@ def plot_3d_surface_with_overlay_MFM(topography, phase, colorscale, scale_x, sca
     return fig
 
 # --- Interfaz con Streamlit ---
-set_background("streamlit_background.png")  # Fondo aplicado a TODAS las secciones
+set_background(BASE_DIR / "streamlit_background.png")  # Fondo aplicado a TODAS las secciones
 
 st.title("Immersive 3D visualization tool for Atomic Force Microscopy (AFM)")
 st.sidebar.title("Menu")
@@ -109,10 +128,10 @@ mode = st.sidebar.radio("Select mode:", ["Main Page", "AFM Topography",
                                          "Conductive Atomic Force Microscopy (C-AFM)", "Magnetic Force Microscopy (MFM)", "PeakForce Tapping"])
 
 if mode == "Main Page":
-    st.image("main_image.png", use_container_width=True)
-    st.image("streamlit_examples.png", use_container_width=True)
-    st.image("streamlit_examples2.png", use_container_width=True)
-    st.image("instructions_streamlit.png", use_container_width=True)
+    st.image(BASE_DIR / "main_image.png", use_container_width=True)
+    st.image(BASE_DIR / "streamlit_examples.png", use_container_width=True)
+    st.image(BASE_DIR / "streamlit_examples2.png", use_container_width=True)
+    st.image(BASE_DIR / "instructions_streamlit.png", use_container_width=True)
     st.markdown("### Developed by José Lorenzo Calderón Solís")
     st.markdown('[📧 Contact: joselorencs@gmail.com](mailto:joselorencs@gmail.com)')
     st.markdown('[💼 LinkedIn](https://www.linkedin.com/in/jos%C3%A9-lorenzo-calder%C3%B3n-sol%C3%ADs-44b086341/)')
@@ -127,6 +146,11 @@ elif mode == "AFM Topography":
         fig = plot_3d_surface_topography(matrix, sx, sy, colorscale)
         st.plotly_chart(fig, use_container_width=True)
 
+    # Enlaces de ejemplo
+    st.markdown("### Example files")
+    with open(BASE_DIR / "example_topography.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Topography", f, file_name="example_topography.txt")
+
 elif mode == "Kelvin Probe Force Microscopy (KPFM)":
     colorscale = st.selectbox("Select colorscale", ["Viridis","Plasma","Inferno","Magma","Cividis",
                                                     "Greens","Blues","Reds","Greys","Turbo","Picnic","Jet","Hot"])
@@ -139,6 +163,13 @@ elif mode == "Kelvin Probe Force Microscopy (KPFM)":
         pot, _, _ = read_txt_as_matrix(pot_file)
         fig = plot_3d_surface_with_overlay(topo, pot, colorscale, sx, sy, cmin, cmax)
         st.plotly_chart(fig, use_container_width=True)
+
+    # Enlaces de ejemplo
+    st.markdown("### Example files")
+    with open(BASE_DIR / "example_topography2.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Topography", f, file_name="example_topography2.txt")
+    with open(BASE_DIR / "example_potential.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Surface Potential", f, file_name="example_potential.txt")
 
 elif mode == "Conductive Atomic Force Microscopy (C-AFM)":
     colorscale = st.selectbox("Select colorscale", ["Viridis","Plasma","Inferno","Magma","Cividis",
@@ -153,6 +184,13 @@ elif mode == "Conductive Atomic Force Microscopy (C-AFM)":
         fig = plot_3d_surface_with_overlay_CAFM(topo, cur, colorscale, sx, sy, cmin, cmax)
         st.plotly_chart(fig, use_container_width=True)
 
+    # Enlaces de ejemplo
+    st.markdown("### Example files")
+    with open(BASE_DIR / "example_topography3.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Topography", f, file_name="example_topography3.txt")
+    with open(BASE_DIR / "example_current.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Electric Current", f, file_name="example_current.txt")
+
 elif mode == "Magnetic Force Microscopy (MFM)":
     colorscale = st.selectbox("Select colorscale", ["Viridis","Plasma","Inferno","Magma","Cividis",
                                                     "Greens","Blues","Reds","Greys","Turbo","Picnic","Jet","Hot"])
@@ -165,6 +203,13 @@ elif mode == "Magnetic Force Microscopy (MFM)":
         ph, _, _ = read_txt_as_matrix(ph_file)
         fig = plot_3d_surface_with_overlay_MFM(topo, ph, colorscale, sx, sy, cmin, cmax)
         st.plotly_chart(fig, use_container_width=True)
+
+    # Enlaces de ejemplo
+    st.markdown("### Example files")
+    with open(BASE_DIR / "example_topography4.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Topography", f, file_name="example_topography4.txt")
+    with open(BASE_DIR / "example_phase.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Phase", f, file_name="example_phase.txt")
 
 elif mode == "PeakForce Tapping":
     pfm_mode = st.selectbox("Select property:", 
@@ -204,3 +249,18 @@ elif mode == "PeakForce Tapping":
         fig.data[0].colorbar.title = f"{pfm_mode} ({prop_info['units']})"
 
         st.plotly_chart(fig, use_container_width=True)
+
+    # Enlaces de ejemplo
+    st.markdown("### Example files")
+    with open(BASE_DIR / "example_topography5.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Topography", f, file_name="example_topography5.txt")
+    with open(BASE_DIR / "example_stiffness.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Stiffness", f, file_name="example_stiffness.txt")
+    with open(BASE_DIR / "example_adhesion.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Adhesion", f, file_name="example_adhesion.txt")
+    with open(BASE_DIR / "example_indentation.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Indentation", f, file_name="example_indentation.txt")
+    with open(BASE_DIR / "example_dissipation.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Dissipation", f, file_name="example_dissipation.txt")
+    with open(BASE_DIR / "example_deformation.txt", "rb") as f:
+        st.download_button("⬇️ Download Example Deformation", f, file_name="example_deformation.txt")
